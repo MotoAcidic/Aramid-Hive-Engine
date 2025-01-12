@@ -2,23 +2,26 @@ import * as accountant from "./accounting/accountant.mjs";
 import * as xrayTech from "./medical/xrayTech.mjs";
 import * as cryptoAnalyst from "./crypto/cryptoAnalyst.mjs";
 import * as electricMotorIndustry from "./industry/electricMotorIndustry.mjs";
+import * as twitterProfessional from "./twitter/twitterProfessional.mjs";
 import { config } from '../config/config.mjs';
 import axios from 'axios';
 import OpenAI from 'openai';
-import { keywords } from './keyWords.mjs';
+import { keywords } from './keyWords.mjs'; // Import the keyword mapping
+import { generateAgentConfigurations, handleQuestion } from './dynamic/dynamic.mjs'; // Import the dynamic agent generator and handler
 
 const openai = new OpenAI();
 
 class Agent {
-    constructor(name, prompts) {
+    constructor(name, personality, specialty, apis) {
         this.name = name;
-        this.prompts = prompts;
+        this.personality = personality;
+        this.specialty = specialty;
+        this.apis = apis;
         this.history = [];
     }
 
-    async generateResponse(input, promptFunction) {
-        const personality = await this.prompts[promptFunction]();
-        const prompt = `${personality}\nUser: ${input}\n${this.name}:`;
+    async generateResponse(input) {
+        const prompt = `${this.personality}\nUser: ${input}\n${this.name}:`;
         if (config.useLocalLLM) {
             try {
                 const response = await axios.post(config.localLLM.serverUrl, {
@@ -37,7 +40,7 @@ class Agent {
                 const completion = await openai.chat.completions.create({
                     model: config.openAI.model,
                     messages: [
-                        { "role": "system", "content": personality },
+                        { "role": "system", "content": this.personality },
                         { "role": "user", "content": input }
                     ]
                 });
@@ -52,29 +55,32 @@ class Agent {
     }
 }
 
-const agents = {
-    accountant: new Agent("Accountant", accountant),
-    xrayTech: new Agent("XrayTech", xrayTech),
-    cryptoAnalyst: new Agent("CryptoAnalyst", cryptoAnalyst),
-    electricMotorIndustry: new Agent("ElectricMotorIndustry", electricMotorIndustry)
-};
-
 export async function startConversation(question) {
     const agentResponses = [];
     let summary = "";
 
-    for (const [role, triggerWords] of Object.entries(keywords)) {
-        if (triggerWords.some((word) => question.toLowerCase().includes(word))) {
-            const agent = agents[role];
-            if (agent) {
-                try {
-                    const response = await agent.prompts.handleQuestion(question);
-                    agentResponses.push({ name: agent.name, response });
-                } catch (error) {
-                    console.error(`Error handling role ${role}:`, error);
-                    throw new Error("Failed to generate a response.");
-                }
-            }
+    // Determine the API section based on the keywords in the question
+    let apiSection = null;
+    for (const [section, words] of Object.entries(keywords)) {
+        if (words.some(word => question.toLowerCase().includes(word))) {
+            apiSection = section;
+            break;
+        }
+    }
+
+    // Generate agent configurations dynamically
+    const agentConfigs = await generateAgentConfigurations(question);
+
+    // Create and execute tasks for each generated agent
+    for (const config of agentConfigs) {
+        const agentApis = apiSection ? config.apis[apiSection] : {};
+        const agent = new Agent(config.name, config.personality, config.specialty, agentApis);
+        try {
+            const response = await agent.generateResponse(question);
+            agentResponses.push({ name: agent.name, response });
+        } catch (error) {
+            console.error(`Error handling role ${agent.name}:`, error);
+            throw new Error("Failed to generate a response.");
         }
     }
 
@@ -86,4 +92,25 @@ export async function startConversation(question) {
     }
 
     return { agents: agentResponses, summary };
+}
+
+export async function autoPostToTwitter() {
+    if (!config.xAutoPoster) return;
+
+    const maxPostsPerMonth = config.postsPerMonth;
+    const postsPerDay = config.postsPerDay;
+    const maxPostsPerDay = Math.min(postsPerDay, Math.floor(maxPostsPerMonth / 30));
+    const interval = 24 * 60 * 60 * 1000 / maxPostsPerDay; // Interval in milliseconds
+
+    for (let i = 0; i < maxPostsPerDay; i++) {
+        setTimeout(async () => {
+            try {
+                const tweet = await twitterProfessional.generateAutoPostTweet();
+                await twitterProfessional.postToTwitter(tweet);
+                console.log("Auto-posted Tweet:", tweet);
+            } catch (error) {
+                console.error("Error auto-posting to Twitter:", error);
+            }
+        }, i * interval);
+    }
 }

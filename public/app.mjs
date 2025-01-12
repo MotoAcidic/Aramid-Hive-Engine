@@ -1,3 +1,7 @@
+// Set your domain url here for the frontend
+// For some reason i am not able to import from the config file so define frontend url here for now.
+const url = "https://aramid.smalltimedevs.com/Aramid-Hive-Engine"
+
 // Ensure code runs after the DOM is fully loaded
 window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
@@ -53,7 +57,7 @@ async function generateText() {
     responseDiv.innerText = "Generating...";
 
     try {
-        const response = await fetch('/generate', {
+        const response = await fetch(`${url}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: prompt }),
@@ -85,7 +89,7 @@ async function continueText() {
     const prompt = `${currentText}\n\nPlease elaborate further and provide additional insights.`;
 
     try {
-        const response = await fetch('/generate', {
+        const response = await fetch(`${url}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: prompt }),
@@ -111,7 +115,7 @@ async function executeCommand() {
     responseDiv.innerText = "Executing command...";
 
     try {
-        const response = await fetch('/execute-command', {
+        const response = await fetch(`${url}/execute-command`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command: commandInput }),
@@ -137,7 +141,7 @@ async function researchAndSummarize() {
     responseDiv.innerText = "Researching and summarizing...";
 
     try {
-        const response = await fetch('/research-and-summarize', {
+        const response = await fetch(`${url}/research-and-summarize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: query }),
@@ -170,11 +174,15 @@ async function agentChat() {
         agentResponsesDiv.innerHTML = "Processing...";
         summaryBoxDiv.innerHTML = "";
 
-        const response = await fetch('/agent-chat', {
+        const response = await fetch(`${url}/agent-chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: prompt }),
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const result = await response.json();
 
@@ -206,8 +214,6 @@ async function agentChat() {
         summaryBoxDiv.innerHTML = "";
     }
 }
-
-
 
 // Attach functions to the window object for HTML access
 window.generateText = generateText;

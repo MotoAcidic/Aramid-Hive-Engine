@@ -18,7 +18,6 @@ export async function SPECIFICATION_RETRIEVAL_AGENT() {
       ### Specification Retrieval Agent
 
       Your role is to find all relevant specifications for the item the user is inquiring about (e.g., motor, blower, capacitor). Use dynamic information retrieval to extract key data such as power rating, voltage, RPM, frame size, and more.
-      Be direct to the point and minimize the use of jargon in your responses, your job is to only find the specifications of the item.
   `;
 }
 
@@ -27,7 +26,6 @@ export async function REPLACEMENT_FINDER_AGENT() {
       ### Replacement Finder Agent
 
       Based on the specifications provided by the previous agent, identify compatible replacements. Include both direct replacements and alternatives from other manufacturers, if applicable. Provide detailed specifications for each replacement option.
-      Be direct to the point and minimize the use of jargon in your responses, your job is to only find the replacement for the item.
   `;
 }
 
@@ -36,7 +34,6 @@ export async function SUMMARY_AGENT() {
       ### Summary Agent
 
       Summarize the findings of all previous agents. Provide the user with a concise overview of the specifications retrieved, the replacement options identified, and actionable next steps.
-      Be direct to the point and minimize the use of jargon in your responses, your job is to summarize the specifications and replacements.
   `;
 }
 

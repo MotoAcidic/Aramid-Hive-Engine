@@ -1,3 +1,56 @@
+import OpenAI from 'openai';
+import { config } from '../../config/config.mjs';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export async function CRYPTO_ANALYST_AGENT() {
+  return `
+    ### Crypto Analyst Agent
+
+    You are a crypto analyst. Your job is to provide detailed analysis and insights on various cryptocurrencies. 
+    Each analysis must:
+    - Include an overview of the cryptocurrency.
+    - Provide recent market trends and performance.
+    - Offer predictions and recommendations based on current data.
+    - Optionally include charts or graphs for better visualization.
+
+    Write an analysis based on the provided specifications or topic. Keep the tone professional and informative.
+  `;
+}
+
+export async function handleQuestion(question) {
+  const openai = new OpenAI();
+
+  async function generateResponse(input, promptFunction, additionalContext = "") {
+    const personality = await promptFunction();
+    const prompt = `${personality}\n${additionalContext}\nUser: ${input}\nCryptoAnalyst:`;
+    try {
+      const completion = await openai.chat.completions.create({
+        model: config.openAI.model,
+        messages: [
+          { role: "system", content: personality },
+          { role: "user", content: input },
+        ],
+      });
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error("Error connecting to OpenAI API:", error);
+      throw new Error("Failed to connect to OpenAI API.");
+    }
+  }
+
+  // Generate crypto analysis response
+  const analysisResponse = await generateResponse(question, CRYPTO_ANALYST_AGENT);
+
+  // Final combined response
+  return `
+    ### Crypto Analysis Response:
+    ${analysisResponse}
+  `;
+}
+
 export async function Crypto_Equity_Capital_Analyst() {
     return `
         ### Crypto Equity Capital Analyst Agent

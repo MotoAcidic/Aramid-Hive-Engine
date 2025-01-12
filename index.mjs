@@ -4,7 +4,8 @@ import axios from 'axios';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { startConversation } from './src/agents/orchestrator.mjs';
+import { startConversation, autoPostToTwitter } from './src/agents/orchestrator.mjs';
+import { config } from './src/config/config.mjs'; // Import the config
 
 dotenv.config();
 
@@ -16,7 +17,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+if (config.runFrontend) {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
 
 // Ensure 'conversations' folder exists
 const conversationsDir = path.join(__dirname, 'conversations');
@@ -87,7 +91,6 @@ app.post('/agent-chat', async (req, res) => {
     }
 });
 
-
 // Helper to perform internet research using Google Custom Search API
 async function internetResearch(query) {
     try {
@@ -102,3 +105,8 @@ async function internetResearch(query) {
 }
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+// Call autoPostToTwitter function if auto-posting is enabled
+if (config.xAutoPoster) {
+    autoPostToTwitter();
+}

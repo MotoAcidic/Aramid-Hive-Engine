@@ -1,20 +1,16 @@
 # Small Time Devs - AI
 
-This project is a web-based AI interaction platform that allows users to interact with an AI model. The platform supports generating text responses, training the AI model, and conducting AI-to-AI conversations. Additionally, it features a 3D avatar rendered using Three.js.
+This project is a web-based AI interaction platform that allows users to interact with an AI model. The platform supports generating text responses, training the AI model, conducting AI-to-AI conversations.
 
 ## Features
 
 - **Text Generation**: Generate text responses based on user prompts.
-- **AI Training**: Train the AI model with user-provided prompts and predefined follow-up questions.
-- **AI-to-AI Conversation**: Conduct conversations between two AI models.
-- **Avatar**: Add your own Avatar to Public Folder and edit the image name in index.html.
-- **3D Avatar**: Display a 3D avatar using a `.fbx` model. ( WIP)
+- **Agent Chat**: Spawn AI Agents that are specialized to procure the proper answer to your question or tasks.
 
 ## Prerequisites
 
 - **Node.js** and **npm** (Node Package Manager)
 - **Python** (for fine-tuning the AI model)
-- **Blender** (for creating and exporting 3D models)
 - **LM Studio**: A local model management software for running AI models. [Download and install LM Studio here.](https://lmstudio.ai/)
 
 ## Installation
@@ -32,22 +28,23 @@ This project is a web-based AI interaction platform that allows users to interac
 
 3. **Set Up Environment Variables**:
     Create a `.env` file in the root directory. Populate it with the following values:
+    // filepath: /home/tfinch/Aramid-Hive-Engine/.env
 
-    ```env
-    HUGGING_FACE_API_KEY=your-huggingface-api-key
-    LOCAL_MODEL_API_URL=http://localhost:8000/generate  # Adjust port if different in LM Studio
+    ```env    
+    LOCAL_MODEL_API_URL='http://localhost:1234/v1/completions'
+    SEARCH_API_KEY='your-search-api-key'
+    SEARCH_ENGINE_ID='your-search-engine-id'
+    SEARCH_API_URL='https://www.googleapis.com/customsearch/v1'
+    OPENAI_API_KEY='your-openai-api-key'
+    SITE_URL='https://your-site-url'
     ```
 
-    - **HUGGING_FACE_API_KEY**: Your Hugging Face API key for connecting to Hugging Face services.
     - **LOCAL_MODEL_API_URL**: The local model endpoint URL from LM Studio for generating responses.
 
 4. **Install and Configure LM Studio**:
     - Download and install LM Studio from [lmstudio.ai](https://lmstudio.ai/).
     - Import or set up your local model in LM Studio.
     - Start LM Studio and note the model’s API endpoint (e.g., `http://localhost:8000/generate`), which you will set as the `LOCAL_MODEL_API_URL` in `.env`.
-
-5. **Prepare the 3D Model**:
-    Ensure your `.fbx` model file (e.g., `Aramid.fbx`) is placed in the `public` directory.
 
 ## Usage
 
@@ -60,9 +57,51 @@ This project is a web-based AI interaction platform that allows users to interac
     Open your web browser and navigate to `http://localhost:5000`.
 
 3. **Interact with the AI**:
-    - Enter a prompt in the text area and click "Generate" to get a response from the AI.
-    - Click "Train" to train the AI model with the provided prompt and predefined follow-up questions.
-    - Click "AI to AI Conversation" to start a conversation between two AI models.
+    - **Generate Text**: Enter a prompt in the text area and click "Generate" to get a response from the AI.
+    - **Train the AI**: Click "Train" to train the AI model with the provided prompt and predefined follow-up questions.
+    - **Agent Chat**: Spawn AI Agents that are specialized to procure the proper answer to your question or tasks.
+
+## Customization
+
+### Config File
+
+The `config.mjs` file located in `src/config/` allows you to customize various settings:
+
+```javascript
+// filepath: /home/tfinch/Aramid-Hive-Engine/src/config/config.mjs
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const config = {
+    useLocalLLM: false, // Set to false to use OpenAI API
+    openAI: {
+        apiKey: process.env.OPENAI_API_KEY, // Set your OpenAI API key here
+        model: 'gpt-4o', // Set the OpenAI model to use
+        store: true, // Set to true to store conversations in the 'conversations' folder
+    },
+    localLLM: {
+        modelPath: process.env.LOCAL_MODEL_API_URL, // Set the file path to your local LLM model
+        serverUrl: process.env.LOCAL_MODEL_API_URL, // Set the server URL for LM Studio
+    },
+    siteUrl: process.env.SITE_URL || 'http://localhost:5051', // Add site URL configuration
+    runFrontend: 'false' // This will run the frontend by default if set to true and only run the backend if set to false
+};
+```
+
+### Environment Variables
+
+The `.env` file should contain the following variables:
+
+```properties
+// filepath: /home/tfinch/Aramid-Hive-Engine/.env
+LOCAL_MODEL_API_URL='http://localhost:1234/v1/completions'
+SEARCH_API_KEY='your-search-api-key'
+SEARCH_ENGINE_ID='your-search-engine-id'
+SEARCH_API_URL='https://www.googleapis.com/customsearch/v1'
+OPENAI_API_KEY='your-openai-api-key'
+SITE_URL='https://your-site-url'
+```
 
 ## File Structure
 
@@ -70,25 +109,8 @@ This project is a web-based AI interaction platform that allows users to interac
   - `index.html`: The main HTML file for the application.
   - `app.js`: All functions for the front end site.
   - `styles.css`: The CSS file for styling the application.
-  - `Aramid.png`: Flat png image for the avatar.
-  - `Aramid.fbx`: The 3D model file for the avatar (WIP).
 - `index.js`: The Node.js server file.
-- `fine_tune.py`: The Python script for fine-tuning the AI model.
 - `.env`: The environment variables file.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **3D Model Not Visible**:
-    - Ensure the path to the `.fbx` file is correct.
-    - Check the browser console for errors.
-    - Verify that `fflate.min.js` is loaded before `FBXLoader.js`.
-
-2. **API Errors**:
-    - Ensure your Hugging Face API key is correct and has the necessary permissions.
-    - Ensure LM Studio is running and the `LOCAL_MODEL_API_URL` matches the LM Studio API endpoint.
-    - Check the server logs for error messages.
 
 ### Debugging Helpers
 
